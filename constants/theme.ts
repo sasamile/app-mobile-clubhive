@@ -5,8 +5,9 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Club Hive - Colores morados
+const tintColorLight = '#9333EA'; // Púrpura principal
+const tintColorDark = '#A855F7'; // Púrpura claro para modo oscuro
 
 export const Colors = {
   light: {
@@ -16,6 +17,10 @@ export const Colors = {
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
+    // Club Hive - Colores adicionales
+    primary: '#9333EA',
+    primaryDark: '#7E22CE',
+    splash: '#9333EA', // Fondo morado del splash
   },
   dark: {
     text: '#ECEDEE',
@@ -24,6 +29,10 @@ export const Colors = {
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
+    // Club Hive - Colores adicionales
+    primary: '#A855F7',
+    primaryDark: '#9333EA',
+    splash: '#9333EA', // Fondo morado del splash
   },
 };
 

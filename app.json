@@ -1,15 +1,27 @@
 {
   "expo": {
-    "name": "clubhive",
-    "slug": "clubhive",
+    "name": "Clubhive",
+    "slug": "Clubhive",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "clubhive",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.clubhive.app",
+      "scheme": "Clubhive",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "Clubhive",
+              "com.googleusercontent.apps.926578021265-5u58ai7iit26e8fbisrpfverklf7gnf7"
+            ]
+          }
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -18,6 +30,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "package": "com.clubhive.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -33,9 +46,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#9333EA",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#9333EA"
           }
         }
       ]
@@ -43,6 +56,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c9a6204e-55f9-4aad-bd09-779aa1bff298"
+      }
+    },
+    "owner": "santiagosuescun07"
   }
 }
