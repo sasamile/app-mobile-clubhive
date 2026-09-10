@@ -1,8 +1,20 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
+const API_URL = "https://api.tiked.co/api";
+
+/** El API Tiked envuelve el body en { success, data, message }. */
+function unwrapApiSuccessPayload<T = unknown>(data: unknown): T {
+  if (!data || typeof data !== "object") return data as T;
+  const envelope = data as Record<string, unknown>;
+  if (envelope.success === true && "data" in envelope) {
+    return envelope.data as T;
+  }
+  return data as T;
+}
+
 const api = axios.create({
-  baseURL: "https://api.clubhive.co/api",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -47,7 +59,10 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    response.data = unwrapApiSuccessPayload(response.data);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     const status = error.response?.status;
@@ -89,14 +104,21 @@ api.interceptors.response.use(
 
         try {
           console.log("♻️ Refrescando token...");
+          const idToken = await AsyncStorage.getItem("idToken");
           const response = await axios.post(
-            "https://api.clubhive.co/api/auth/refresh",
-            { refreshToken },
+            `${API_URL}/auth/refresh`,
+            {
+              refreshToken,
+              ...(idToken ? { idToken } : {}),
+            },
             { headers: { "Content-Type": "application/json" } }
           );
 
           const { accessToken: newAccessToken, idToken: newIdToken } =
-            response.data;
+            unwrapApiSuccessPayload<{
+              accessToken?: string;
+              idToken?: string;
+            }>(response.data);
 
           if (!newAccessToken) throw new Error("Refresh falló sin token nuevo");
 

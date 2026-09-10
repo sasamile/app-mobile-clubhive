@@ -132,6 +132,7 @@ export default function TicketsScreen() {
       const isProcessingUrl = 
         event.url.includes("payment/processing") || 
         event.url.includes("/processing") ||
+        event.url.includes("tiked.co/processing") ||
         event.url.includes("clubhive.co/processing");
       
       if (isProcessingUrl) {
@@ -140,8 +141,8 @@ export default function TicketsScreen() {
           let urlString = event.url;
           
           // Si es un deep link, convertir a formato URL estándar
-          if (urlString.startsWith("clubhive://")) {
-            urlString = urlString.replace("clubhive://", "https://");
+          if (urlString.startsWith("clubhive://") || urlString.startsWith("tiked://")) {
+            urlString = urlString.replace(/^(clubhive|tiked):\/\//, "https://");
           }
           
           // Si es una URL web completa, usarla directamente
@@ -186,8 +187,8 @@ export default function TicketsScreen() {
         if (url.includes("payment/processing") || url.includes("/processing")) {
           try {
             let urlString = url;
-            if (urlString.startsWith("clubhive://")) {
-              urlString = urlString.replace("clubhive://", "https://");
+            if (urlString.startsWith("clubhive://") || urlString.startsWith("tiked://")) {
+              urlString = urlString.replace(/^(clubhive|tiked):\/\//, "https://");
             }
             const urlObj = new URL(urlString);
             const eventId = urlObj.searchParams.get("eventId");
@@ -447,8 +448,7 @@ export default function TicketsScreen() {
 
       // 2️⃣ Generar URL de pago con Wompi
       // Wompi requiere una URL HTTP/HTTPS válida, no deep links
-      // La página web debe redirigir a: clubhive://payment/processing?eventId=...&reference=...
-      const redirectUrl = `https://clubhive.co/processing?eventId=${params.id}&reference=${reference}`;
+      const redirectUrl = `https://tiked.co/processing?eventId=${params.id}&reference=${reference}`;
       
 
       const result = await createWompiPaymentUrl(

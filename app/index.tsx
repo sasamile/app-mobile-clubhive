@@ -83,9 +83,8 @@ export default function SplashScreen() {
             transform: [{ scale: scaleAnim }],
           },
         ]}>
-        {/* Logo de Club Hive */}
         <Image
-          source={require('@/assets/logos/clubhive.png')}
+          source={require('@/assets/logos/tiked.png')}
           style={styles.logo}
           contentFit="contain"
           transition={200}
@@ -100,16 +99,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#7C4DFF',
+    backgroundColor: '#000000',
   },
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   logo: {
-    width: 600,
-    height: 600,
-    maxWidth: '90%',
-    maxHeight: '90%',
+    width: 220,
+    height: 220,
   },
 });

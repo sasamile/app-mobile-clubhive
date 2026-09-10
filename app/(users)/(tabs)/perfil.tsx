@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Fonts } from '@/constants/theme';
+import { signOutFromGoogle } from '@/lib/auth/google';
 import { clearAuthData, getUserData, removeSelectedCity, type User } from '@/lib/storage';
 
 // Obtener URL de Gravatar usando MD5 del email
@@ -52,6 +53,7 @@ export default function PerfilScreen() {
 
   const handleLogout = async () => {
     try {
+      await signOutFromGoogle();
       await clearAuthData();
       await removeSelectedCity();
     } finally {

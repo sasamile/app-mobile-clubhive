@@ -3,6 +3,7 @@ import {
   findTransactionByReference
 } from "@/lib/wompi";
 import { Ionicons } from "@expo/vector-icons";
+import { Image as ExpoImage } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -327,12 +328,11 @@ export default function PaymentProcessingScreen() {
               <Ionicons name="close" size={24} color="#FFF" />
             </TouchableOpacity>
 
-            {/* Ilustración de clubhive */}
             <View style={styles.beeContainer}>
-              <Image
-                source={require("@/assets/logos/clubhive.png")}
+              <ExpoImage
+                source={require("@/assets/logos/tiked.png")}
                 style={styles.errorImage}
-                resizeMode="contain"
+                contentFit="contain"
               />
             </View>
 

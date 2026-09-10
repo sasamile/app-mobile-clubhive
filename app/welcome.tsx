@@ -1,5 +1,3 @@
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { getSelectedCity, isAuthenticated } from '@/lib/storage';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
@@ -8,13 +6,9 @@ import { useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function WelcomeScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const borderColor = isDark ? '#333333' : '#E5E5E5';
-  const primaryColor = Colors[colorScheme ?? 'light'].primary;
+const BRAND = '#7C4DFF';
 
-  // Verificar si el usuario ya está logueado al entrar a esta pantalla
+export default function WelcomeScreen() {
   useFocusEffect(
     useCallback(() => {
       const checkAuth = async () => {
@@ -43,16 +37,12 @@ export default function WelcomeScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: '#000' }]}>
       <StatusBar style="light" />
       
-      {/* Imagen superior */}
       <View style={styles.imageContainer}>
-        <View style={[styles.imageWrapper, { borderColor: primaryColor }]}>
-          <Image
-            source={require('@/assets/logos/huevobailando.png')}
-            style={styles.image}
-            contentFit="cover"
-            transition={200}
-          />
-        </View>
+        <Image
+          source={require('@/assets/logos/mascot-qr.webp')}
+          style={styles.image}
+          contentFit="contain"
+        />
       </View>
 
       {/* Texto principal */}
@@ -66,15 +56,14 @@ export default function WelcomeScreen() {
       <View style={styles.buttonsContainer}>
         {/* Botón Iniciar Sesión */}
         <TouchableOpacity
-          style={[styles.primaryButton, { backgroundColor: primaryColor }]}
+          style={styles.primaryButton}
           onPress={handleLogin}
           activeOpacity={0.8}>
           <Text style={styles.primaryButtonText}>Iniciar Sesión</Text>
         </TouchableOpacity>
 
-        {/* Botón Soy organizador */}
         <TouchableOpacity
-          style={[styles.secondaryButton, { borderColor, backgroundColor: '#FFFFFF' }]}
+          style={styles.secondaryButton}
           onPress={handleOrganizer}
           activeOpacity={0.8}>
           <Text style={[styles.secondaryButtonText, { color: '#000000' }]}>
@@ -95,18 +84,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 40,
-  },
-  imageWrapper: {
-    width: 300,
-    height: 300,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
+    paddingTop: 24,
   },
   image: {
-    width: '100%',
-    height: '100%',
+    width: 320,
+    height: 360,
   },
   textContainer: {
     paddingVertical: 32,
@@ -123,19 +105,19 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   primaryButton: {
-    backgroundColor: '#9333EA',
+    backgroundColor: BRAND,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#9333EA',
+    shadowColor: BRAND,
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
     elevation: 6,
   },
   primaryButtonText: {
@@ -144,7 +126,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   secondaryButton: {
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
+    borderColor: '#E5E5E5',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
