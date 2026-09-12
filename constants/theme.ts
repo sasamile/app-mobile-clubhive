@@ -5,9 +5,9 @@
 
 import { Platform } from 'react-native';
 
-// Tiked - Colores morados
-const tintColorLight = '#9333EA'; // Púrpura principal
-const tintColorDark = '#A855F7'; // Púrpura claro para modo oscuro
+// Tiked — mismo acento que el login (#7C4DFF)
+const tintColorLight = '#7C4DFF';
+const tintColorDark = '#7C4DFF';
 
 export const Colors = {
   light: {
@@ -18,8 +18,8 @@ export const Colors = {
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
     // Tiked
-    primary: '#9333EA',
-    primaryDark: '#7E22CE',
+    primary: '#7C4DFF',
+    primaryDark: '#5B2FD6',
     splash: '#000000',
   },
   dark: {
@@ -30,8 +30,8 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
     // Tiked
-    primary: '#A855F7',
-    primaryDark: '#9333EA',
+    primary: '#7C4DFF',
+    primaryDark: '#5B2FD6',
     splash: '#000000',
   },
 };

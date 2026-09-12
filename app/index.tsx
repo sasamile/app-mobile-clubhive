@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { getSelectedCity, isAuthenticated } from '@/lib/storage';
+import { isAuthenticated } from '@/lib/storage';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -39,18 +39,12 @@ export default function SplashScreen() {
       if (!isMounted) return;
       
       const authenticated = await isAuthenticated();
-      const city = await getSelectedCity();
 
       if (!isMounted) return;
 
-      // Si está autenticado y tiene ciudad seleccionada, ir directo a tabs
-      if (authenticated && city) {
+      if (authenticated) {
         router.replace('/(users)/(tabs)');
-      } else if (authenticated && !city) {
-        // Si está autenticado pero no tiene ciudad, ir a seleccionar ciudad
-        router.replace('/(users)/city');
       } else {
-        // Si no está autenticado, ir a welcome
         router.replace('/welcome');
       }
     };

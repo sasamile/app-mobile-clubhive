@@ -12,6 +12,7 @@ export interface User {
   userId: string;
   dni: string;
   phone: string;
+  imageUrl?: string;
 }
 
 export interface AuthData {
@@ -93,6 +94,22 @@ export const getUserData = async (): Promise<User | null> => {
   } catch (error) {
     console.error('Error al obtener información del usuario:', error);
     return null;
+  }
+};
+
+export const saveUserData = async (user: User): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
+    const rawAuth = await AsyncStorage.getItem(AUTH_DATA_KEY);
+    if (!rawAuth) return;
+    const auth = JSON.parse(rawAuth) as AuthData;
+    await AsyncStorage.setItem(
+      AUTH_DATA_KEY,
+      JSON.stringify({ ...auth, user })
+    );
+  } catch (error) {
+    console.error('Error al guardar información del usuario:', error);
+    throw error;
   }
 };
 

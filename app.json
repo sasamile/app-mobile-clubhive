@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "Tiked",
-    "slug": "Clubhive",
+    "slug": "clubhive",
+    "scheme": "tiked",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -10,21 +11,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.clubhive.app",
-      "scheme": "tiked",
       "usesAppleSignIn": true,
       "infoPlist": {
         "CFBundleDisplayName": "Tiked",
         "CFBundleName": "Tiked",
-        "CFBundleURLTypes": [
-          {
-            "CFBundleURLSchemes": [
-              "tiked",
-              "com.googleusercontent.apps.reemplazar-con-client-id-ios"
-            ]
-          }
-        ],
-        "GIDClientID": "reemplazar-con-client-id-ios.apps.googleusercontent.com",
-        "ITSAppUsesNonExemptEncryption": false
+        "GIDClientID": "1014451974721-f1q2t7kl9t20rp0g3n5v5tqhbd0q7vn3.apps.googleusercontent.com",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Tiked usa tu ubicación para mostrarte los eventos que hay cerca de ti.",
+        "NSPhotoLibraryUsageDescription": "Tiked usa tus fotos para tu foto de perfil.",
+        "NSCameraUsageDescription": "Tiked usa la cámara para tu foto de perfil."
       }
     },
     "android": {
@@ -44,8 +39,27 @@
     },
     "plugins": [
       "./plugins/withIosModularHeaders",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.1014451974721-f1q2t7kl9t20rp0g3n5v5tqhbd0q7vn3"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Tiked usa tus fotos para tu foto de perfil.",
+          "cameraPermission": "Tiked usa la cámara para tu foto de perfil."
+        }
+      ],
       "expo-router",
       "expo-apple-authentication",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Tiked usa tu ubicación para mostrarte los eventos que hay cerca de ti."
+        }
+      ],
       [
         "expo-splash-screen",
         {

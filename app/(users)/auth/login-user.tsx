@@ -6,6 +6,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as WebBrowser from "expo-web-browser";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,6 +28,9 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const BRAND = "#7C4DFF";
+
+const TERMS_URL = "https://tiked.co/terms-and-conditions";
+const PRIVACY_URL = "https://tiked.co/privacy-policy";
 
 type AuthProvider = "apple" | "google" | null;
 
@@ -82,10 +86,14 @@ const LoginUser = () => {
     router.back();
   };
 
+  const openLegalLink = (url: string) => {
+    void WebBrowser.openBrowserAsync(url);
+  };
+
   const finishLogin = (success: boolean, error?: string, cancelled?: boolean) => {
     if (cancelled) return;
     if (success) {
-      router.push("/(users)/city");
+      router.replace("/(users)/(tabs)");
       return;
     }
     Alert.alert(
@@ -229,6 +237,24 @@ const LoginUser = () => {
               </Text>
             </View>
           </TouchableOpacity>
+
+          <Text style={styles.legalText}>
+            Al continuar aceptas nuestros{" "}
+            <Text
+              style={styles.legalLink}
+              onPress={() => openLegalLink(TERMS_URL)}
+            >
+              Términos y Condiciones
+            </Text>{" "}
+            y{" "}
+            <Text
+              style={styles.legalLink}
+              onPress={() => openLegalLink(PRIVACY_URL)}
+            >
+              Políticas de Privacidad
+            </Text>
+            .
+          </Text>
         </Animated.View>
       </SafeAreaView>
     </View>
@@ -337,6 +363,17 @@ const styles = StyleSheet.create({
     color: "#0E0E0F",
     fontSize: 16,
     fontWeight: "600",
+  },
+  legalText: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: "center",
+    color: "rgba(255,255,255,0.65)",
+  },
+  legalLink: {
+    color: "rgba(255,255,255,0.92)",
+    textDecorationLine: "underline",
   },
 });
 

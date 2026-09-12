@@ -42,9 +42,22 @@ export const handleAppleLogin = async (): Promise<{
       };
     }
 
+    // Apple entrega el nombre una sola vez, en el primer inicio de sesion de este Apple ID
+    // con la app. En los siguientes viene vacio, y el identityToken nunca lo incluye, asi que
+    // hay que reenviarlo aqui para que el backend pueda crear la cuenta.
+    const fullName = [
+      credential.fullName?.givenName,
+      credential.fullName?.familyName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
     const payload: SocialLoginRequest = {
       socialToken: identityToken,
       authType: "APPLE",
+      termsAccepted: true,
+      ...(fullName ? { fullName } : {}),
     };
 
     const { data } = await api.post<SocialLoginResponse>(

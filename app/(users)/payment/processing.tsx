@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { formatEventTime, unwrapEventPayload } from "@/lib/format-event";
 import {
   findTransactionByReference
 } from "@/lib/wompi";
@@ -52,8 +53,9 @@ export default function PaymentProcessingScreen() {
     const loadEventData = async () => {
       try {
         const eventResponse = await api.get(`/events/get/${params.eventId}`);
-        if (isMounted) {
-          setEventData(eventResponse.data);
+        const event = unwrapEventPayload<ApiEventDetail>(eventResponse.data);
+        if (isMounted && event) {
+          setEventData(event);
         }
       } catch (error) {
         console.error("Error cargando datos del evento:", error);
@@ -300,7 +302,7 @@ export default function PaymentProcessingScreen() {
               <View style={styles.eventDetails}>
                 <Text style={styles.eventName}>{eventData.name}</Text>
                 <Text style={styles.eventDate}>
-                  {formatDate(eventData.date, eventData.time)}
+                  {formatDate(eventData.date, formatEventTime(eventData.time))}
                 </Text>
               </View>
             )}

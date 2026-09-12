@@ -14,7 +14,7 @@ El proyecto `tiked-486003` **no** se usa: sus credenciales quedaron fuera del c�
 | Client | Para qué | Valor |
 | --- | --- | --- |
 | Aplicación web ("Tiked Cognito Client") | `webClientId`. Define el `aud` del idToken que valida el backend | `1014451974721-gcpkfkr3pmknnoi26r8djq4g9r61qt03.apps.googleusercontent.com` |
-| iOS | Abrir el flujo nativo en iPhone | **falta crearlo** |
+| iOS ("Tiked iOS") | Abrir el flujo nativo en iPhone. Creado el 10 sep 2026 con el paquete `com.clubhive.app` | `1014451974721-f1q2t7kl9t20rp0g3n5v5tqhbd0q7vn3.apps.googleusercontent.com` |
 | Android | Abrir el flujo nativo en Android | **falta crearlo** |
 
 El **client secret nunca va en la app**. El SDK nativo no lo necesita y cualquiera
@@ -26,22 +26,26 @@ El SDK envía el client web como `serverClientID`, y Google devuelve un idToken 
 `aud` es ese client web. Así el token que manda la app es equivalente al de la web y
 el backend lo valida con la misma configuración de Cognito.
 
-## Falta: crear el client iOS
+## Client iOS: ya creado
 
-1. Google Cloud → APIs y servicios → Credenciales → Crear cliente → **iOS**.
-2. ID del paquete: `com.clubhive.app` (el `ios.bundleIdentifier` de `app.json`).
-3. Copiar el Client ID a `app.json`, en dos lugares:
-   - `ios.infoPlist.GIDClientID`: el client ID completo.
-   - `ios.infoPlist.CFBundleURLTypes[0].CFBundleURLSchemes`: el esquema invertido,
-     o sea `com.googleusercontent.apps.<parte antes de .apps.googleusercontent.com>`.
-4. Regenerar el proyecto nativo y correr:
+Está en `app.json` en dos lugares, escritos por
+[`scripts/set-google-ios-client.mjs`](../scripts/set-google-ios-client.mjs):
+
+- `ios.infoPlist.GIDClientID`: el client ID completo.
+- Plugin `@react-native-google-signin/google-signin` con `iosUrlScheme`
+  `com.googleusercontent.apps.1014451974721-f1q2t7kl9t20rp0g3n5v5tqhbd0q7vn3`
+  (Expo lo escribe en Info.plist al hacer prebuild; no basta con ponerlo a mano
+  junto a `scheme`, porque el plugin de linking puede pisarlo).
+
+Si algún día hay que cambiarlo:
 
 ```bash
-npx expo prebuild --platform ios --clean && npx expo run:ios
+node scripts/set-google-ios-client.mjs <nuevo-client-id>
+npx expo prebuild --platform ios && npx expo run:ios
 ```
 
-Mientras el valor siga en `reemplazar-con-client-id-ios`, el botón de Google muestra
-un mensaje explicando qué falta en vez de reventar.
+Cambiar esos valores toca el binario, no solo el JS. Un reload de Metro no alcanza:
+hay que reinstalar la app para que iOS registre el esquema de URL.
 
 ## Falta: crear el client Android
 
@@ -62,12 +66,63 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
 4. El client Android no se referencia en el código: basta con que exista en Google Cloud.
    Si falta, el login falla con `DEVELOPER_ERROR` (código 10).
 
-## Usuarios de prueba
+## El 401 CUSTOMER_SOCIAL_AUTH_FAILED: causa encontrada
 
-La pantalla de consentimiento está en estado **Prueba**, con 0 usuarios de prueba
-cargados. En ese estado solo pueden entrar las cuentas que estén en la lista de
-usuarios de prueba (máximo 100). Para abrirlo a cualquiera hay que completar la
-página de Información de marca y publicar la app.
+El 10 de septiembre de 2026 el login en iPhone terminaba bien en Google pero
+`POST /customers/auth/socialLogin` respondia 401. Eran dos cosas distintas:
+
+**1. El backend validaba contra el client equivocado.** En `tiked-back`, la propiedad
+`google.clientIds` de `application.yml` listaba solo el client
+`359391005856-...` del proyecto `tiked-486003`. `SocialLoginService` arma un
+`GoogleIdTokenVerifier` con esa lista como audiencias validas, asi que un token con
+`aud` del client web real no verificaba: `verify()` devuelve null, el envoltorio
+`GoogleAuthToken` revienta al leer el subject y `CustomerExceptionMapper.socialAuth`
+lo traduce a `CUSTOMER_SOCIAL_AUTH_FAILED`. Ya esta corregido: la lista incluye el
+client que usan la web y la app, y se puede sobreescribir con `GOOGLE_CLIENT_IDS`.
+**El cambio necesita un despliegue del backend para que aplique en api.tiked.co.**
+
+**2. La app no enviaba `termsAccepted`.** `CustomerService.getSocialAuth` lo exige
+cuando el correo no existe todavia, y sin el responde
+`CUSTOMER_TERMS_ACCEPTANCE_REQUIRED` en vez de crear la cuenta. La web ya lo mandaba
+en `lib/customer-social-login.ts`. Ahora la app tambien lo manda, en Google y en
+Apple, y la pantalla de login avisa que al continuar se aceptan los terminos, con
+enlaces a `https://tiked.co/terms-and-conditions` y `https://tiked.co/privacy-policy`.
+
+Para diagnosticar casos parecidos, en desarrollo la app imprime una linea
+`🔎 idToken de Google` con los claims `aud`, `azp` e `iss`, sin exponer el token.
+
+## Iniciar sesion con Apple
+
+Mismo endpoint que Google, con `authType: "APPLE"` y el `identityToken` que devuelve
+`expo-apple-authentication`. Dos diferencias que importan:
+
+- **El nombre viaja aparte.** El identityToken de Apple no lo incluye, y Apple se lo
+  entrega al cliente una unica vez: en el primer inicio de sesion de ese Apple ID con la
+  app. Por eso [`lib/auth/apple.ts`](../lib/auth/apple.ts) lo reenvia en `fullName`. Si
+  falta, el backend usa el tramo local del correo, porque la columna del nombre no admite
+  nulos.
+- **El correo puede ser una direccion de reenvio** del tipo `@privaterelay.appleid.com`
+  si el usuario elige ocultarlo. Es una direccion valida y estable para esa cuenta.
+
+En el backend el token se verifica contra el JWKS de Apple, comprobando firma, emisor,
+expiracion y audiencia. La audiencia de un login nativo es el bundle identifier de la
+app, configurado en `apple.clientIds` y sobreescribible con `APPLE_CLIENT_IDS`.
+
+Para que funcione en el dispositivo, el App ID en Apple Developer necesita la capacidad
+"Sign In with Apple" habilitada. En `app.json` ya estan `ios.usesAppleSignIn` y el plugin
+`expo-apple-authentication`.
+
+## Usuarios de prueba: el siguiente bloqueo
+
+La pantalla de consentimiento está en estado **Prueba** con 0 usuarios de prueba
+cargados. En ese estado Google rechaza cualquier cuenta que no esté en esa lista,
+con un error de "acceso bloqueado", aunque los clients estén bien configurados.
+
+Se arregla de dos maneras, en Google Cloud → Google Auth Platform → Público:
+
+- Agregar las cuentas con las que vas a probar, hasta 100.
+- O completar la página de Información de marca y publicar la app, para que entre
+  cualquiera.
 
 ## Cambio de nombre visible
 

@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { unwrapEventPayload } from "@/lib/format-event";
 import { getUserData, isAuthenticated } from "@/lib/storage";
 import { createWompiPaymentUrl, findTransactionByReference } from "@/lib/wompi";
 import { Ionicons } from "@expo/vector-icons";
@@ -96,8 +97,15 @@ export default function TicketsScreen() {
       try {
         setIsLoading(true);
         const response = await api.get(`/events/get/${params.id}`);
-        const event: ApiEventDetail = response.data;
-        setEventData(event);
+        const event = unwrapEventPayload<ApiEventDetail>(response.data);
+        if (!event) {
+          throw new Error("Respuesta de evento inválida");
+        }
+        setEventData({
+          ...event,
+          tickets: event.tickets ?? [],
+          promoters: event.promoters ?? [],
+        });
       } catch (error: any) {
         console.error("Error al cargar evento:", error);
         Alert.alert(

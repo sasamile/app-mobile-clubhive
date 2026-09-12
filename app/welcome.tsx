@@ -1,4 +1,4 @@
-import { getSelectedCity, isAuthenticated } from '@/lib/storage';
+import { isAuthenticated } from '@/lib/storage';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -13,12 +13,9 @@ export default function WelcomeScreen() {
     useCallback(() => {
       const checkAuth = async () => {
         const authenticated = await isAuthenticated();
-        const city = await getSelectedCity();
 
-        if (authenticated && city) {
+        if (authenticated) {
           router.replace('/(users)/(tabs)');
-        } else if (authenticated && !city) {
-          router.replace('/(users)/city');
         }
       };
       checkAuth();
