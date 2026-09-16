@@ -87,6 +87,33 @@ todos los Pods. Los puntos donde suele fallar, por orden de probabilidad:
 - **Node no encontrado en la fase de bundle.** Lo cubre el final de `ci_post_clone.sh`,
   que escribe `ios/.xcode.env.local` con la ruta de Node.
 
+## La version de Xcode esta fijada a proposito
+
+El workflow usa **Xcode 26.6**, no "Latest Release". No es un descuido.
+
+Apple exige que las apps adopten el ciclo de vida de escenas de UIKit. Compiladas con el
+SDK de iOS 26 eso es solo una advertencia; con el SDK de iOS 27 se vuelve fatal y el
+sistema mata la app nada mas arrancar, antes de que corra una sola linea de JavaScript.
+
+Es exactamente lo que paso con la compilacion 10 del 16 de septiembre de 2026: subio a
+TestFlight, se instalo y se cerraba al abrir. El informe apuntaba a
+`___UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`.
+
+El proyecto esta en Expo SDK 54, y ni esa version ni React Native 0.81 adoptan escenas:
+`AppDelegate.swift` crea la ventana y arranca React Native a la manera clasica. Expo
+resolvio esto a partir de SDK 57, con un delegado de escena propio.
+
+Asi que hay dos caminos, y por ahora se toma el primero:
+
+1. **Quedarse en Xcode 26.** Cambio de una linea en el workflow, sin tocar codigo.
+2. **Adoptar el ciclo de vida de escenas.** Requiere anadir `UIApplicationSceneManifest`
+   al Info.plist y un `SceneDelegate` que cree la ventana, moviendo el arranque de React
+   Native fuera del AppDelegate. En SDK 54 hay que hacerlo a mano o con un plugin de la
+   comunidad, y hay reportes de pantalla en blanco al hacerlo mal.
+
+Esto es temporal: Apple acabara exigiendo el SDK de iOS 27 para publicar en la App Store.
+Antes de esa fecha hay que subir a un SDK de Expo que ya adopte escenas.
+
 ## EAS
 
 No se quitó nada. `eas.json` sigue igual y `eas build` funciona como siempre. Cuando el
