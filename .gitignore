@@ -39,5 +39,8 @@ yarn-error.*
 app-example
 
 # generated native folders
-/ios
+#
+# `ios/` SI se versiona: Xcode Cloud compila lo que encuentra en el repositorio y necesita
+# el .xcodeproj y el .xcworkspace ahi. Lo pesado (Pods, build, datos de usuario de Xcode)
+# lo excluye `ios/.gitignore`. Ver docs/xcode-cloud.md antes de correr `expo prebuild`.
 /android
