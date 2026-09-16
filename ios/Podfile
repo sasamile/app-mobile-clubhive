@@ -60,5 +60,19 @@ target 'Clubhive' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+    # tiked: normalizar IPHONEOS_DEPLOYMENT_TARGET
+    # Va despues de react_native_post_install a proposito: ese hook sube los pods principales
+    # pero deja atras los bundles de recursos, que son los que Xcode 27 rechaza.
+    installer.generated_projects.each do |project|
+      project.targets.each do |target|
+        target.build_configurations.each do |build_configuration|
+          current = build_configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+          if current.nil? || current.to_f < 15.1
+            build_configuration.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+          end
+        end
+      end
+    end
+
   end
 end
