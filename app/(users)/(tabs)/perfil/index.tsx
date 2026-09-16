@@ -1,11 +1,17 @@
 import { ScreenAtmosphere } from "@/components/discover/screen-atmosphere";
 import { FLOATING_TAB_INSET } from "@/constants/discover";
 import { useDiscoverTheme } from "@/hooks/use-discover-theme";
+import {
+  API_ENV_LABELS,
+  getApiEnvironment,
+  subscribeApiEnvironment,
+  type ApiEnvironment,
+} from "@/lib/api-env";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useCallback, useState, type ComponentProps } from "react";
+import { useCallback, useEffect, useState, type ComponentProps } from "react";
 import {
   Alert,
   Pressable,
@@ -33,6 +39,9 @@ export default function PerfilScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [cityName, setCityName] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [apiEnv, setApiEnv] = useState<ApiEnvironment>(getApiEnvironment);
+
+  useEffect(() => subscribeApiEnvironment(setApiEnv), []);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +51,7 @@ export default function PerfilScreen() {
         setPhotoUrl(await resolveProfileImage(saved));
         const city = await getSelectedCity();
         setCityName(city?.name ?? null);
+        setApiEnv(getApiEnvironment());
       })();
     }, [])
   );
@@ -136,6 +146,13 @@ export default function PerfilScreen() {
             label="Ubicación"
             value={cityName ?? "Elegir ciudad"}
             onPress={() => router.push("/(users)/(tabs)/perfil/ubicacion")}
+          />
+          <View style={[styles.separator, { backgroundColor: theme.line }]} />
+          <Row
+            icon="server-outline"
+            label="Entorno"
+            value={API_ENV_LABELS[apiEnv]}
+            onPress={() => router.push("/(users)/(tabs)/perfil/entorno")}
           />
         </View>
 

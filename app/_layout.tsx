@@ -6,7 +6,6 @@ import {
 } from "@react-navigation/native";
 import * as SystemUI from "expo-system-ui";
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo } from "react";
 import { LogBox } from "react-native";
 
@@ -19,6 +18,7 @@ import "react-native-reanimated";
 
 import { DiscoverPalettes } from "@/constants/discover";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { loadApiEnvironment } from "@/lib/api-env";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -41,6 +41,7 @@ export default function RootLayout() {
   );
 
   useEffect(() => {
+    void loadApiEnvironment();
     void SystemUI.setBackgroundColorAsync(theme.bg);
   }, [theme.bg]);
 
@@ -51,15 +52,50 @@ export default function RootLayout() {
           headerShown: false,
           animation: "none",
           contentStyle: { backgroundColor: theme.bg },
+          statusBarStyle: dark ? "light" : "dark",
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="welcome"
+          options={{ headerShown: false, statusBarStyle: "light" }}
+        />
         <Stack.Screen
           name="(users)/auth/login-user"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="(users)/auth/login-organizer"
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: "#000000" },
+            statusBarStyle: "light",
+          }}
+        />
+        <Stack.Screen
+          name="(users)/auth/signup-organizer"
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: "#000000" },
+            statusBarStyle: "light",
+          }}
+        />
+        <Stack.Screen
+          name="(users)/auth/confirm-organizer"
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+            contentStyle: { backgroundColor: "#000000" },
+            statusBarStyle: "light",
+          }}
+        />
         <Stack.Screen name="(users)/(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(organizer)"
+          options={{ headerShown: false, statusBarStyle: "light" }}
+        />
         <Stack.Screen
           name="(users)/event/[id]"
           options={{ animation: "slide_from_right", gestureEnabled: true }}
@@ -69,7 +105,6 @@ export default function RootLayout() {
           options={{ animation: "slide_from_bottom", gestureEnabled: true }}
         />
       </Stack>
-      <StatusBar style={theme.statusBar} />
     </ThemeProvider>
   );
 }

@@ -23,9 +23,12 @@ export interface AuthData {
   expiresIn: number;
 }
 
-const SELECTED_CITY_KEY = 'selectedCity';
-const USER_DATA_KEY = 'userData';
-const AUTH_DATA_KEY = 'authData';
+export type SessionRole = "customer" | "organizer";
+
+const SELECTED_CITY_KEY = "selectedCity";
+const USER_DATA_KEY = "userData";
+const AUTH_DATA_KEY = "authData";
+const SESSION_ROLE_KEY = "sessionRole";
 
 /**
  * Guarda la ciudad seleccionada en AsyncStorage
@@ -71,13 +74,48 @@ export const removeSelectedCity = async (): Promise<void> => {
 /**
  * Guarda la información completa del usuario y autenticación
  */
-export const saveAuthData = async (authData: AuthData): Promise<void> => {
+export const saveAuthData = async (
+  authData: AuthData,
+  role: SessionRole = "customer"
+): Promise<void> => {
   try {
-    await AsyncStorage.setItem(AUTH_DATA_KEY, JSON.stringify(authData));
-    await AsyncStorage.setItem(USER_DATA_KEY, JSON.stringify(authData.user));
+    await AsyncStorage.multiSet([
+      [AUTH_DATA_KEY, JSON.stringify(authData)],
+      [USER_DATA_KEY, JSON.stringify(authData.user)],
+      ["accessToken", authData.accessToken],
+      ["idToken", authData.idToken],
+      ["refreshToken", authData.refreshToken],
+      [SESSION_ROLE_KEY, role],
+    ]);
   } catch (error) {
-    console.error('Error al guardar información de autenticación:', error);
+    console.error("Error al guardar información de autenticación:", error);
     throw error;
+  }
+};
+
+export const getSessionRole = async (): Promise<SessionRole | null> => {
+  try {
+    const role = await AsyncStorage.getItem(SESSION_ROLE_KEY);
+    if (role === "organizer" || role === "customer") return role;
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const getHomeRoute = async (): Promise<
+  "/(organizer)/(tabs)" | "/(users)/(tabs)" | "/welcome"
+> => {
+  try {
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    if (!accessToken) return "/welcome";
+    const role = await getSessionRole();
+    if (role === "organizer") return "/(organizer)/(tabs)";
+    const userData = await AsyncStorage.getItem(USER_DATA_KEY);
+    if (userData) return "/(users)/(tabs)";
+    return "/welcome";
+  } catch {
+    return "/welcome";
   }
 };
 
@@ -151,9 +189,10 @@ export const clearAuthData = async (): Promise<void> => {
     await AsyncStorage.multiRemove([
       AUTH_DATA_KEY,
       USER_DATA_KEY,
-      'accessToken',
-      'refreshToken',
-      'idToken',
+      SESSION_ROLE_KEY,
+      "accessToken",
+      "refreshToken",
+      "idToken",
     ]);
   } catch (error) {
     console.error('Error al limpiar información de autenticación:', error);

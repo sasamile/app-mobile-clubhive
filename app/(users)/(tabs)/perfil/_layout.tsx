@@ -34,6 +34,7 @@ export default function PerfilStack() {
         />
         <Stack.Screen name="editar" options={{ title: "Editar perfil" }} />
         <Stack.Screen name="ubicacion" options={{ title: "Ubicación" }} />
+        <Stack.Screen name="entorno" options={{ title: "Entorno" }} />
         <Stack.Screen
           name="terminos"
           options={{ title: "Términos y condiciones" }}

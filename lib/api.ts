@@ -1,7 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
-
-const API_URL = "https://api.tiked.co/api";
+import axios, { AxiosHeaders } from "axios";
+import { getApiBaseUrlAsync } from "@/lib/api-env";
 
 /** El API Tiked envuelve el body en { success, data, message }. */
 function unwrapApiSuccessPayload<T = unknown>(data: unknown): T {
@@ -14,36 +13,55 @@ function unwrapApiSuccessPayload<T = unknown>(data: unknown): T {
 }
 
 const api = axios.create({
-  baseURL: API_URL,
   headers: {
-    "Content-Type": "application/json",
     Accept: "application/json",
   },
   withCredentials: true,
 });
 
-// Interceptor para agregar tokens a las peticiones
 api.interceptors.request.use(
   async (config) => {
-    try {
-      const accessToken = await AsyncStorage.getItem("accessToken");
-      const idToken = await AsyncStorage.getItem("idToken");
+    config.baseURL = await getApiBaseUrlAsync();
 
-      if (accessToken) {
-        config.headers["Authorization"] = `Bearer ${accessToken}`;
+    const isFormData =
+      typeof FormData !== "undefined" && config.data instanceof FormData;
+    if (isFormData) {
+      const headers = AxiosHeaders.from(config.headers ?? {});
+      headers.delete("Content-Type");
+      config.headers = headers;
+    } else {
+      const headers = AxiosHeaders.from(config.headers ?? {});
+      if (!headers.get("Content-Type")) {
+        headers.set("Content-Type", "application/json");
       }
-      if (idToken) {
-        config.headers["IdToken"] = idToken;
+      config.headers = headers;
+    }
+
+    const path = String(config.url ?? "");
+    const isPublicOrganizerAuth = path.includes("/organizers/auth/");
+
+    if (!isPublicOrganizerAuth) {
+      try {
+        const accessToken = await AsyncStorage.getItem("accessToken");
+        const idToken = await AsyncStorage.getItem("idToken");
+        const headers = AxiosHeaders.from(config.headers ?? {});
+
+        if (accessToken) {
+          headers.set("Authorization", `Bearer ${accessToken}`);
+        }
+        if (idToken) {
+          headers.set("IdToken", idToken);
+        }
+        config.headers = headers;
+      } catch (error) {
+        console.error("Error al obtener tokens:", error);
       }
-    } catch (error) {
-      console.error("Error al obtener tokens:", error);
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores y refresh tokens
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: any) => void;
@@ -67,21 +85,18 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    // Si el refresh falla también -> limpiar sesión completa
     if (status === 401 && originalRequest?._retry) {
       console.warn("❌ Refresh token inválido o expirado, cerrando sesión...");
       await handleLogout();
       return Promise.reject(error);
     }
 
-    // Si es la primera vez que da 401, intentar refresh
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = await AsyncStorage.getItem("refreshToken");
 
-        // Si no hay refresh token → logout directo
         if (!refreshToken) {
           console.warn("⚠️ No hay refreshToken disponible, cerrando sesión...");
           await handleLogout();
@@ -89,7 +104,6 @@ api.interceptors.response.use(
         }
 
         if (isRefreshing) {
-          // Esperar a que termine el refresh actual
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           })
@@ -105,8 +119,9 @@ api.interceptors.response.use(
         try {
           console.log("♻️ Refrescando token...");
           const idToken = await AsyncStorage.getItem("idToken");
+          const baseURL = await getApiBaseUrlAsync();
           const response = await axios.post(
-            `${API_URL}/auth/refresh`,
+            `${baseURL}/auth/refresh`,
             {
               refreshToken,
               ...(idToken ? { idToken } : {}),
@@ -122,7 +137,6 @@ api.interceptors.response.use(
 
           if (!newAccessToken) throw new Error("Refresh falló sin token nuevo");
 
-          // Actualizar tokens en AsyncStorage
           await AsyncStorage.setItem("accessToken", newAccessToken);
           if (newIdToken) {
             await AsyncStorage.setItem("idToken", newIdToken);
@@ -150,11 +164,9 @@ api.interceptors.response.use(
 
 const handleLogout = async () => {
   try {
-    // Avisar al backend (si está disponible)
     await api.post("/auth/logout").catch(() => {});
   } finally {
     console.warn("🧹 Limpiando sesión local...");
-    // Limpiar AsyncStorage
     await AsyncStorage.multiRemove([
       "accessToken",
       "refreshToken",
@@ -164,4 +176,3 @@ const handleLogout = async () => {
 };
 
 export default api;
-

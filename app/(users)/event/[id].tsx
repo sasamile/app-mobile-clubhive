@@ -16,6 +16,7 @@ import {
 } from "@/lib/local-cache";
 import { EventLocationMap } from "@/components/event-location-map";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
@@ -150,6 +151,7 @@ export default function EventDetailScreen() {
     return (
       <View style={[styles.screen, { justifyContent: "center" }]}>
         <ActivityIndicator color={Discover.accent} />
+        <StatusBarBlur height={insets.top} dark={theme.statusBar === "light"} />
       </View>
     );
   }
@@ -397,9 +399,40 @@ export default function EventDetailScreen() {
           <Text style={styles.buyText}>{ctaLabel}</Text>
         </Pressable>
       </View>
+      <StatusBarBlur height={insets.top} dark={theme.statusBar === "light"} />
     </View>
   );
 }
+
+function StatusBarBlur({ height, dark }: { height: number; dark: boolean }) {
+  if (height <= 0) return null;
+  return (
+    <View pointerEvents="none" style={[statusBlurStyles.bar, { height }]}>
+      <BlurView
+        intensity={90}
+        tint={dark ? "systemChromeMaterialDark" : "systemChromeMaterialLight"}
+        style={StyleSheet.absoluteFill}
+      />
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: dark ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" },
+        ]}
+      />
+    </View>
+  );
+}
+
+const statusBlurStyles = StyleSheet.create({
+  bar: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 40,
+    overflow: "hidden",
+  },
+});
 
 function createEventStyles(t: DiscoverPalette) {
   return StyleSheet.create({

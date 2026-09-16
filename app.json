@@ -19,6 +19,7 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Tiked usa tu ubicación para mostrarte los eventos que hay cerca de ti.",
         "NSPhotoLibraryUsageDescription": "Tiked usa tus fotos para tu foto de perfil.",
+        "NSPhotoLibraryAddUsageDescription": "Tiked guarda tu foto de perfil en este dispositivo.",
         "NSCameraUsageDescription": "Tiked usa la cámara para tu foto de perfil."
       }
     },

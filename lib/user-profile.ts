@@ -47,8 +47,12 @@ export async function persistProfilePhoto(sourceUri: string): Promise<string> {
   const dest = profilePhotoPath();
   if (!dest) throw new Error("No hay espacio local para guardar la foto.");
 
-  await FileSystem.deleteAsync(dest, { idempotent: true });
-  await FileSystem.copyAsync({ from: sourceUri, to: dest });
+  try {
+    await FileSystem.deleteAsync(dest, { idempotent: true });
+    await FileSystem.copyAsync({ from: sourceUri, to: dest });
+  } catch {
+    return sourceUri;
+  }
 
   const user = await getUserData();
   if (user) {

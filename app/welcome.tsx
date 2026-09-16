@@ -1,4 +1,5 @@
-import { isAuthenticated } from '@/lib/storage';
+import { ApiEnvChip } from '@/components/api-env-chip';
+import { getHomeRoute } from '@/lib/storage';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -12,10 +13,9 @@ export default function WelcomeScreen() {
   useFocusEffect(
     useCallback(() => {
       const checkAuth = async () => {
-        const authenticated = await isAuthenticated();
-
-        if (authenticated) {
-          router.replace('/(users)/(tabs)');
+        const next = await getHomeRoute();
+        if (next !== "/welcome") {
+          router.replace(next);
         }
       };
       checkAuth();
@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
   };
 
   const handleOrganizer = () => {
-    router.push('/(users)/auth/login-user');
+    router.push('/(users)/auth/login-organizer');
   };
 
   return (
@@ -67,6 +67,8 @@ export default function WelcomeScreen() {
             Soy organizador
           </Text>
         </TouchableOpacity>
+
+        <ApiEnvChip />
       </View>
     </SafeAreaView>
   );

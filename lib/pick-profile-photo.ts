@@ -2,7 +2,12 @@ import {
   persistProfilePhoto,
   removeProfilePhoto,
 } from "@/lib/user-profile";
-import { Alert } from "react-native";
+import {
+  ActionSheetIOS,
+  Alert,
+  InteractionManager,
+  Platform,
+} from "react-native";
 
 type ImagePickerModule = typeof import("expo-image-picker");
 
@@ -17,11 +22,21 @@ async function loadImagePicker(): Promise<ImagePickerModule | null> {
 function pickerUnavailable() {
   Alert.alert(
     "Foto de perfil",
-    "Para cambiar la foto abre la app con el development build (no Expo Go) y vuelve a intentarlo."
+    "No se pudo abrir la galería. Cierra la app y ábrela de nuevo."
   );
 }
 
-export async function pickProfilePhoto(): Promise<string | null> {
+function afterSheet(run: () => Promise<void>) {
+  InteractionManager.runAfterInteractions(() => {
+    setTimeout(() => {
+      void run().catch(() => {
+        Alert.alert("Foto", "No se pudo actualizar la imagen.");
+      });
+    }, 450);
+  });
+}
+
+async function pickProfilePhoto(): Promise<string | null> {
   const ImagePicker = await loadImagePicker();
   if (!ImagePicker) {
     pickerUnavailable();
@@ -39,16 +54,48 @@ export async function pickProfilePhoto(): Promise<string | null> {
 
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ["images"],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.85,
+    allowsEditing: false,
+    quality: 0.7,
+    exif: false,
   });
 
   if (result.canceled || !result.assets[0]?.uri) return null;
   return persistProfilePhoto(result.assets[0].uri);
 }
 
-export async function takeProfilePhoto(): Promise<string | null> {
+export async function pickLocalImage(options?: {
+  maxBytes?: number;
+}): Promise<string | null> {
+  const ImagePicker = await loadImagePicker();
+  if (!ImagePicker) {
+    pickerUnavailable();
+    return null;
+  }
+
+  const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (!permission.granted) {
+    Alert.alert("Fotos", "Activa el acceso a tu galería para subir el logo.");
+    return null;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsEditing: false,
+    quality: 0.85,
+    exif: false,
+  });
+
+  if (result.canceled || !result.assets[0]?.uri) return null;
+  const asset = result.assets[0];
+  const maxBytes = options?.maxBytes ?? 5 * 1024 * 1024;
+  if (asset.fileSize && asset.fileSize > maxBytes) {
+    Alert.alert("Logo", "La imagen no debe superar 5MB.");
+    return null;
+  }
+  return asset.uri;
+}
+
+async function takeProfilePhoto(): Promise<string | null> {
   const ImagePicker = await loadImagePicker();
   if (!ImagePicker) {
     pickerUnavailable();
@@ -62,9 +109,9 @@ export async function takeProfilePhoto(): Promise<string | null> {
   }
 
   const result = await ImagePicker.launchCameraAsync({
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.85,
+    allowsEditing: false,
+    quality: 0.7,
+    exif: false,
   });
 
   if (result.canceled || !result.assets[0]?.uri) return null;
@@ -72,42 +119,43 @@ export async function takeProfilePhoto(): Promise<string | null> {
 }
 
 export function promptProfilePhoto(onChanged: (uri: string | null) => void) {
+  const gallery = () =>
+    afterSheet(async () => {
+      const uri = await pickProfilePhoto();
+      if (uri) onChanged(uri);
+    });
+  const camera = () =>
+    afterSheet(async () => {
+      const uri = await takeProfilePhoto();
+      if (uri) onChanged(uri);
+    });
+  const remove = () =>
+    afterSheet(async () => {
+      await removeProfilePhoto();
+      onChanged(null);
+    });
+
+  if (Platform.OS === "ios") {
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        title: "Foto de perfil",
+        options: ["Cancelar", "Elegir de la galería", "Tomar foto", "Quitar foto"],
+        cancelButtonIndex: 0,
+        destructiveButtonIndex: 3,
+      },
+      (index) => {
+        if (index === 1) gallery();
+        else if (index === 2) camera();
+        else if (index === 3) remove();
+      }
+    );
+    return;
+  }
+
   Alert.alert("Foto de perfil", "Elige de dónde quieres tomarla.", [
-    {
-      text: "Galería",
-      onPress: () => {
-        void pickProfilePhoto()
-          .then((uri) => {
-            if (uri) onChanged(uri);
-          })
-          .catch(() => {
-            Alert.alert("Foto", "No se pudo guardar la imagen.");
-          });
-      },
-    },
-    {
-      text: "Cámara",
-      onPress: () => {
-        void takeProfilePhoto()
-          .then((uri) => {
-            if (uri) onChanged(uri);
-          })
-          .catch(() => {
-            Alert.alert("Foto", "No se pudo guardar la imagen.");
-          });
-      },
-    },
-    {
-      text: "Quitar foto",
-      style: "destructive",
-      onPress: () => {
-        void removeProfilePhoto()
-          .then(() => onChanged(null))
-          .catch(() => {
-            Alert.alert("Foto", "No se pudo quitar la imagen.");
-          });
-      },
-    },
+    { text: "Galería", onPress: gallery },
+    { text: "Cámara", onPress: camera },
+    { text: "Quitar foto", style: "destructive", onPress: remove },
     { text: "Cancelar", style: "cancel" },
   ]);
 }

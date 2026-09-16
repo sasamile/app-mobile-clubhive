@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { isAuthenticated } from '@/lib/storage';
+import { getHomeRoute } from '@/lib/storage';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -38,15 +38,9 @@ export default function SplashScreen() {
     const checkAuthAndRedirect = async () => {
       if (!isMounted) return;
       
-      const authenticated = await isAuthenticated();
-
+      const next = await getHomeRoute();
       if (!isMounted) return;
-
-      if (authenticated) {
-        router.replace('/(users)/(tabs)');
-      } else {
-        router.replace('/welcome');
-      }
+      router.replace(next);
     };
 
     const timer = setTimeout(() => {
