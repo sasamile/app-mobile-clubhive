@@ -114,6 +114,22 @@ Asi que hay dos caminos, y por ahora se toma el primero:
 Esto es temporal: Apple acabara exigiendo el SDK de iOS 27 para publicar en la App Store.
 Antes de esa fecha hay que subir a un SDK de Expo que ya adopte escenas.
 
+## Node se descarga, no se instala con Homebrew
+
+`ci_post_clone.sh` baja el binario oficial de nodejs.org en vez de usar `brew install`.
+No es capricho: la imagen de **Xcode 26.6 corre sobre Intel x86_64**, y Homebrew dejo de
+dar soporte a esa plataforma en septiembre de 2025. Ya no publica binarios precompilados,
+asi que intenta compilar desde fuente y se cae con "C compiler cannot create executables",
+porque las Command Line Tools de esa imagen tampoco estan completas.
+
+Con la imagen de Xcode 27, que es Apple Silicon, `brew install node@22` funcionaba. Al
+fijar Xcode 26.6 por el asunto del ciclo de vida de escenas, se cambio de arquitectura sin
+querer y el script dejo de servir. Se vio en las compilaciones 12 a 15.
+
+El script detecta la arquitectura con `uname -m` y baja el tarball que corresponda, asi
+que funciona igual en Intel y en Apple Silicon. Si algun dia se vuelve a Xcode 27, no hay
+que tocar nada.
+
 ## EAS
 
 No se quitó nada. `eas.json` sigue igual y `eas build` funciona como siempre. Cuando el
