@@ -7,6 +7,8 @@ import { useCallback } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
+
 const BRAND = '#7C4DFF';
 
 export default function WelcomeScreen() {
